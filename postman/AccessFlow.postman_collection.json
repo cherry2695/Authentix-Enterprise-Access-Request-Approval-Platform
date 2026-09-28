@@ -1,0 +1,502 @@
+{
+  "info": {
+    "name": "AccessFlow Complete API Suite",
+    "description": "Complete REST API collection for AccessFlow Identity Governance & Approval Workflow Engine. Covers Auth, Users, Applications, Requests, Multi-Stage Approvals, Permissions, Audit Logs, Access Reviews, Notifications, and Dashboards.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "applicationId", "value": "1" },
+    { "key": "applicationRoleId", "value": "2" },
+    { "key": "accessRequestId", "value": "1" },
+    { "key": "permissionId", "value": "1" },
+    { "key": "reviewId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login as Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('token', body.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@accessflow.io\",\n  \"password\": \"Password123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login as Manager",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('token', body.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"manager@accessflow.io\",\n  \"password\": \"Password123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login as Employee",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('token', body.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"employee@accessflow.io\",\n  \"password\": \"Password123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Current User Profile (/me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Applications Catalog",
+      "item": [
+        {
+          "name": "List Applications (Search & Filter)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/applications"
+          }
+        },
+        {
+          "name": "Get Application by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/applications/{{applicationId}}"
+          }
+        },
+        {
+          "name": "List Roles for Application",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/applications/{{applicationId}}/roles"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Access Requests",
+      "item": [
+        {
+          "name": "Create Access Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/access-requests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicationId\": 1,\n  \"applicationRoleId\": 2,\n  \"justification\": \"Need edit access to update customer records for campaign.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get My Access Requests",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/access-requests/my"
+          }
+        },
+        {
+          "name": "Get Request by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/access-requests/{{accessRequestId}}"
+          }
+        },
+        {
+          "name": "Cancel Pending Request",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/access-requests/{{accessRequestId}}/cancel"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Multi-Stage Approvals",
+      "item": [
+        {
+          "name": "Get Pending Approvals Queue",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/approvals/pending"
+          }
+        },
+        {
+          "name": "Manager Decision (Approve)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/approvals/{{accessRequestId}}/manager-decision",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"APPROVED\",\n  \"comments\": \"Business need verified. Approved at manager stage.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Manager Decision (Reject)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/approvals/{{accessRequestId}}/manager-decision",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"REJECTED\",\n  \"comments\": \"Editor role is not required for your current project assignment.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Admin Decision (Approve & Grant Permission)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/approvals/{{accessRequestId}}/admin-decision",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"APPROVED\",\n  \"comments\": \"Administrative security check passed. Access granted.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Admin Decision (Reject)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/approvals/{{accessRequestId}}/admin-decision",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"REJECTED\",\n  \"comments\": \"Security policy violation: requires senior management sign-off.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Request Approval History Timeline",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/approvals/{{accessRequestId}}/history"
+          }
+        },
+        {
+          "name": "Get Team Requests (Manager)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/approvals/team"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Permission Management",
+      "item": [
+        {
+          "name": "Get All Permissions (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/permissions"
+          }
+        },
+        {
+          "name": "Get My Permissions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/permissions/my"
+          }
+        },
+        {
+          "name": "Revoke Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/permissions/{{permissionId}}/revoke",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Project completed; access no longer required.\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Audit Trail Explorer",
+      "item": [
+        {
+          "name": "Search & Filter Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/audit-logs?page=0&size=20"
+          }
+        },
+        {
+          "name": "Get Recent Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/audit-logs/recent?limit=10"
+          }
+        },
+        {
+          "name": "Get Audit Log by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/audit-logs/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Access Reviews Campaign",
+      "item": [
+        {
+          "name": "Create Review Campaign (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/access-reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"campaignName\": \"Q4 2026 User Access Certification\",\n  \"description\": \"Quarterly audit of active permissions across all critical systems.\",\n  \"startDate\": \"2026-10-01\",\n  \"dueDate\": \"2026-10-31\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Review Campaigns",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/access-reviews"
+          }
+        },
+        {
+          "name": "Get Campaign Details",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/access-reviews/{{reviewId}}"
+          }
+        },
+        {
+          "name": "Get Campaign Review Items",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/access-reviews/{{reviewId}}/items"
+          }
+        },
+        {
+          "name": "Submit Item Review Decision",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/access-reviews/{{reviewId}}/items/1/decision",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"APPROVED_RETAIN\",\n  \"comments\": \"Access verified as necessary for current operational duties.\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. In-App Notifications",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/notifications"
+          }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/notifications/unread-count"
+          }
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/notifications/1/read"
+          }
+        },
+        {
+          "name": "Mark All as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/notifications/read-all"
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Dashboards",
+      "item": [
+        {
+          "name": "Employee Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/dashboard/employee"
+          }
+        },
+        {
+          "name": "Manager Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/dashboard/manager"
+          }
+        },
+        {
+          "name": "Admin Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/dashboard/admin"
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. User Management (Admin)",
+      "item": [
+        {
+          "name": "List All Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/users"
+          }
+        },
+        {
+          "name": "List Managers (Dropdown)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/users/managers"
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"David Developer\",\n  \"email\": \"david@accessflow.io\",\n  \"password\": \"Password123!\",\n  \"role\": \"EMPLOYEE\",\n  \"managerId\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Toggle User Status (Activate/Deactivate)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/users/3/status"
+          }
+        }
+      ]
+    }
+  ]
+}

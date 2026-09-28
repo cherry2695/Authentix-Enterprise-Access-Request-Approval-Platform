@@ -1,0 +1,339 @@
+:root {
+  --primary-navy: #0f2a4a;
+  --primary-navy-dark: #091b31;
+  --primary-navy-light: #183c66;
+  --accent-blue: #2563eb;
+  --accent-blue-subtle: #eff6ff;
+  --sidebar-width: 260px;
+  --topbar-height: 64px;
+  --bg-main: #f8fafc;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Layout */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--primary-navy);
+  color: #fff;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.sidebar-brand {
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-nav {
+  list-style: none;
+  padding: 1rem 0.75rem;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.nav-section-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  padding: 0.75rem 0.75rem 0.25rem;
+  font-weight: 600;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  color: #cbd5e1;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+  margin-bottom: 0.25rem;
+}
+
+.sidebar-link:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.sidebar-link.active {
+  background-color: var(--accent-blue);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.sidebar-link i {
+  font-size: 1.15rem;
+}
+
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.85rem;
+}
+
+/* Main Area */
+.main-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.top-navbar {
+  height: var(--topbar-height);
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 99;
+}
+
+.page-content {
+  padding: 2rem;
+  flex-grow: 1;
+}
+
+/* Stat Cards */
+.stat-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+/* Status Badges */
+.badge-status {
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-pending-manager {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.badge-pending-admin {
+  background-color: #e0e7ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+}
+
+.badge-granted {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-rejected {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.badge-cancelled {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.badge-active {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.badge-revoked {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  text-decoration: line-through;
+}
+
+/* Card Styling */
+.access-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.access-card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Approval Timeline Stepper */
+.timeline-stepper {
+  position: relative;
+  padding: 1.5rem 0;
+}
+
+.timeline-step {
+  display: flex;
+  gap: 1.5rem;
+  position: relative;
+  padding-bottom: 2rem;
+}
+
+.timeline-step:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-step::before {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 36px;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--border-color);
+}
+
+.timeline-step:last-child::before {
+  display: none;
+}
+
+.timeline-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  z-index: 1;
+  flex-shrink: 0;
+  background: #f1f5f9;
+  color: #64748b;
+  border: 2px solid #cbd5e1;
+}
+
+.timeline-step.completed .timeline-circle {
+  background: #10b981;
+  border-color: #10b981;
+  color: #fff;
+}
+
+.timeline-step.current .timeline-circle {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+}
+
+.timeline-step.rejected .timeline-circle {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+}
+
+.timeline-content {
+  flex-grow: 1;
+}
+
+/* Tables */
+.table-custom {
+  margin-bottom: 0;
+}
+
+.table-custom th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-custom td {
+  padding: 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.88rem;
+}
+
+.table-custom tr:hover td {
+  background-color: #f8fafc;
+}
+
+/* Buttons */
+.btn-primary-navy {
+  background-color: var(--primary-navy);
+  color: #ffffff;
+  border: none;
+  font-weight: 500;
+}
+
+.btn-primary-navy:hover {
+  background-color: var(--primary-navy-dark);
+  color: #ffffff;
+}
+
+/* Dropdown Notification Badge */
+.notification-bell-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 0.65rem;
+  padding: 0.25em 0.45em;
+}

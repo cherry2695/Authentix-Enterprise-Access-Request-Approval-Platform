@@ -1,0 +1,55 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: accessflow-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: accessflow
+      MYSQL_USER: accessflow_user
+      MYSQL_PASSWORD: changeme
+    ports:
+      - "3306:3306"
+    volumes:
+      - accessflow_mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/2-seed.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: accessflow-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: accessflow
+      DB_USERNAME: accessflow_user
+      DB_PASSWORD: changeme
+      JWT_SECRET: LongSecretKeyForAccessFlowIdentityGovernanceJwtTokenGenerationMustBe256BitsMin
+      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000,http://localhost:80
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: accessflow-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  accessflow_mysql_data:
