@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AccessFlow — Enterprise Identity Governance & Approval Engine</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root {
+      --primary-navy: #0f2a4a;
+      --accent-blue: #2563eb;
+    }
+    .badge-pending-mgr { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .badge-pending-adm { background-color: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+    .badge-granted { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+    .badge-rejected { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .badge-cancelled { background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased font-sans min-h-screen flex flex-col">
+
+  <!-- TOP HEADER -->
+  <header class="bg-[#0f2a4a] text-white border-b border-slate-700 px-6 py-3 flex items-center justify-between shadow-md">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow">
+        <i class="bi bi-shield-check"></i>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight">AccessFlow</h1>
+        <p class="text-xs text-slate-300">Enterprise Identity Governance & Approval Engine</p>
+      </div>
+    </div>
+
+    <!-- ROLE SWITCHER & USER INFO -->
+    <div class="flex items-center space-x-4">
+      <div class="flex items-center space-x-1 bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700 text-xs">
+        <span class="text-slate-400 mr-1">Demo Role:</span>
+        <button id="btn-role-emp" onclick="switchRole('EMPLOYEE')" class="px-2.5 py-1 rounded font-medium bg-blue-600 text-white transition">Employee</button>
+        <button id="btn-role-mgr" onclick="switchRole('MANAGER')" class="px-2.5 py-1 rounded font-medium text-slate-300 hover:text-white transition">Manager</button>
+        <button id="btn-role-adm" onclick="switchRole('ADMIN')" class="px-2.5 py-1 rounded font-medium text-slate-300 hover:text-white transition">Admin</button>
+      </div>
+
+      <div class="flex items-center space-x-2 pl-3 border-l border-slate-700">
+        <div id="user-avatar" class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center font-bold text-xs text-white">E</div>
+        <div class="text-left hidden sm:block">
+          <div id="user-name" class="text-xs font-semibold leading-tight">Ethan Employee</div>
+          <span id="user-badge" class="text-[10px] text-blue-300">EMPLOYEE</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <nav class="bg-white border-b border-slate-200 px-6 flex space-x-6 text-sm font-medium overflow-x-auto shadow-sm">
+    <button onclick="setTab('dashboard')" id="tab-dashboard" class="py-3 border-b-2 border-blue-600 text-blue-600 flex items-center gap-1.5 font-semibold">
+      <i class="bi bi-grid-1x2"></i> Dashboard
+    </button>
+    <button onclick="setTab('catalog')" id="tab-catalog" class="py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+      <i class="bi bi-collection"></i> App Catalog
+    </button>
+    <button onclick="setTab('requests')" id="tab-requests" class="py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+      <i class="bi bi-send-check"></i> My Requests <span id="my-req-count" class="ml-1 px-1.5 py-0.2 bg-slate-100 rounded-full text-xs">2</span>
+    </button>
+    <button onclick="setTab('approvals')" id="tab-approvals" class="py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+      <i class="bi bi-inbox"></i> Approvals Queue <span id="pending-count" class="ml-1 px-1.5 py-0.2 bg-amber-100 text-amber-800 font-bold rounded-full text-xs">1</span>
+    </button>
+    <button onclick="setTab('permissions')" id="tab-permissions" class="py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+      <i class="bi bi-key"></i> Entitlements
+    </button>
+    <button onclick="setTab('audit')" id="tab-audit" class="py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+      <i class="bi bi-journal-text"></i> Audit Trail
+    </button>
+  </nav>
+
+  <!-- MAIN BODY -->
+  <main class="flex-1 p-6 max-w-7xl w-full mx-auto">
+
+    <!-- FEEDBACK ALERT -->
+    <div id="feedback-alert" class="hidden mb-4 p-3 rounded-lg text-sm flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-sm">
+      <i class="bi bi-check-circle-fill text-emerald-600"></i>
+      <span id="feedback-text">Action completed successfully.</span>
+    </div>
+
+    <!-- TAB 1: DASHBOARD -->
+    <section id="view-dashboard">
+      <div class="mb-5 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900" id="dash-title">Identity Governance Dashboard</h2>
+          <p class="text-sm text-slate-500">Live operational overview of access permissions and workflow velocity</p>
+        </div>
+        <button onclick="openRequestModal(1)" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition">
+          <i class="bi bi-plus-circle"></i> Request New Access
+        </button>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase">Total Requests <i class="bi bi-send text-blue-600 text-lg"></i></div>
+          <div class="text-2xl font-bold text-slate-900 mt-2" id="stat-total-req">3</div>
+          <p class="text-xs text-slate-400 mt-1">Cross-system submissions</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase">Pending Approvals <i class="bi bi-hourglass-split text-amber-500 text-lg"></i></div>
+          <div class="text-2xl font-bold text-amber-600 mt-2" id="stat-pending-req">2</div>
+          <p class="text-xs text-slate-400 mt-1">Awaiting manager or admin</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase">Active Entitlements <i class="bi bi-key text-emerald-600 text-lg"></i></div>
+          <div class="text-2xl font-bold text-emerald-600 mt-2" id="stat-active-perm">2</div>
+          <p class="text-xs text-slate-400 mt-1">Currently provisioned</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase">Audit Events <i class="bi bi-shield-check text-indigo-600 text-lg"></i></div>
+          <div class="text-2xl font-bold text-indigo-600 mt-2" id="stat-audit-count">4</div>
+          <p class="text-xs text-slate-400 mt-1">Append-only log entries</p>
+        </div>
+      </div>
+
+      <!-- DASHBOARD RECENT GRID -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-slate-900">Recent Workflow Requests</h3>
+            <button onclick="setTab('requests')" class="text-xs text-blue-600 hover:underline font-semibold">View All &rarr;</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-slate-500 text-xs uppercase border-b border-slate-200">
+                <tr>
+                  <th class="p-3">Requester</th>
+                  <th class="p-3">App & Role</th>
+                  <th class="p-3">Status</th>
+                  <th class="p-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="dash-requests-tbody" class="divide-y divide-slate-100">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <h3 class="font-bold text-slate-900 mb-3">Two-Stage Pipeline Health</h3>
+          <p class="text-xs text-slate-500 mb-4">Strict separation of duty ensures managerial signoff precedes administrative provisioning.</p>
+          <div class="space-y-3">
+            <div class="p-3 bg-amber-50 rounded-lg border border-amber-200">
+              <div class="text-xs font-semibold text-amber-800">Stage 1: Manager Review</div>
+              <div class="text-sm font-bold text-amber-900 mt-0.5" id="pipe-stage1">1 Request Awaiting Manager</div>
+            </div>
+            <div class="p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+              <div class="text-xs font-semibold text-indigo-800">Stage 2: Administrator Authorization</div>
+              <div class="text-sm font-bold text-indigo-900 mt-0.5" id="pipe-stage2">1 Request Awaiting Admin</div>
+            </div>
+            <div class="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+              <div class="text-xs font-semibold text-emerald-800">Final: Permission Provisioned</div>
+              <div class="text-sm font-bold text-emerald-900 mt-0.5" id="pipe-stage3">1 Successfully Granted</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: APP CATALOG -->
+    <section id="view-catalog" class="hidden">
+      <div class="mb-5">
+        <h2 class="text-xl font-bold text-slate-900">Enterprise Application Catalog</h2>
+        <p class="text-sm text-slate-500">Select an enterprise application to request access with business justification</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5" id="catalog-grid">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+    <!-- TAB 3: MY REQUESTS & TIMELINE -->
+    <section id="view-requests" class="hidden">
+      <div class="mb-5 flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">My Access Requests</h2>
+          <p class="text-sm text-slate-500">Track real-time multi-stage approval states and feedback</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-6">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase border-b border-slate-200">
+            <tr>
+              <th class="p-3">ID</th>
+              <th class="p-3">Application</th>
+              <th class="p-3">Role</th>
+              <th class="p-3">Status</th>
+              <th class="p-3">Justification</th>
+              <th class="p-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="my-requests-tbody" class="divide-y divide-slate-100">
+            <!-- Injected via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TIMELINE INSPECTOR -->
+      <div id="timeline-box" class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 hidden">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+          <h3 class="font-bold text-slate-900" id="timeline-title">Approval Timeline: Request #1</h3>
+          <button onclick="document.getElementById('timeline-box').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-sm">Close</button>
+        </div>
+        <div id="timeline-stepper" class="space-y-4">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: APPROVALS QUEUE -->
+    <section id="view-approvals" class="hidden">
+      <div class="mb-5">
+        <h2 class="text-xl font-bold text-slate-900" id="approvals-header">Pending Approvals Queue</h2>
+        <p class="text-sm text-slate-500" id="approvals-sub">Review employee justifications and authorize access</p>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase border-b border-slate-200">
+            <tr>
+              <th class="p-3">Requester</th>
+              <th class="p-3">App & Role</th>
+              <th class="p-3">Justification</th>
+              <th class="p-3">Workflow Stage</th>
+              <th class="p-3 text-right">Decision Actions</th>
+            </tr>
+          </thead>
+          <tbody id="approvals-tbody" class="divide-y divide-slate-100">
+            <!-- Injected via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 5: ENTITLEMENTS / PERMISSIONS -->
+    <section id="view-permissions" class="hidden">
+      <div class="mb-5">
+        <h2 class="text-xl font-bold text-slate-900">Provisioned Entitlements</h2>
+        <p class="text-sm text-slate-500">Active and historical granted permissions with self-service relinquishment</p>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase border-b border-slate-200">
+            <tr>
+              <th class="p-3">Identity</th>
+              <th class="p-3">Application</th>
+              <th class="p-3">Access Level</th>
+              <th class="p-3">Status</th>
+              <th class="p-3">Granted Date</th>
+              <th class="p-3 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="permissions-tbody" class="divide-y divide-slate-100">
+            <!-- Injected via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 6: AUDIT TRAIL -->
+    <section id="view-audit" class="hidden">
+      <div class="mb-5">
+        <h2 class="text-xl font-bold text-slate-900">Immutable Audit Trail Explorer</h2>
+        <p class="text-sm text-slate-500">Append-only compliance log with correlation IDs and tamper-evident event history</p>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase border-b border-slate-200">
+            <tr>
+              <th class="p-3">Timestamp</th>
+              <th class="p-3">Actor</th>
+              <th class="p-3">Event Action</th>
+              <th class="p-3">Target</th>
+              <th class="p-3">Correlation ID</th>
+              <th class="p-3">Reason / Details</th>
+            </tr>
+          </thead>
+          <tbody id="audit-tbody" class="divide-y divide-slate-100 font-mono text-xs">
+            <!-- Injected via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- REQUEST ACCESS MODAL -->
+  <div id="request-modal" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
+        <h3 class="font-bold text-slate-900 text-base" id="modal-app-title">Request Access: CRM</h3>
+        <button onclick="closeRequestModal()" class="text-slate-400 hover:text-slate-600">&times;</button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Target Entitlement Role</label>
+          <select id="modal-role-select" class="w-full text-sm border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <option value="VIEWER">VIEWER (Read-only)</option>
+            <option value="EDITOR">EDITOR (Create and update)</option>
+            <option value="ADMIN">ADMIN (Full administrative)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Business Justification <span class="text-rose-500">*</span></label>
+          <textarea id="modal-justification" rows="3" class="w-full text-sm border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Explain project or business necessity..."></textarea>
+        </div>
+        <p class="text-xs text-slate-400">Request will route to Mia Manager (Reporting Manager) for initial endorsement.</p>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+          <button onclick="closeRequestModal()" class="px-3 py-1.5 rounded-lg border border-slate-300 text-slate-600 text-sm hover:bg-slate-50">Cancel</button>
+          <button onclick="submitAccessRequest()" class="px-4 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 shadow-sm">Submit Request</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // In-memory state machine for interactive demonstration
+    let currentRole = 'EMPLOYEE';
+    let currentTab = 'dashboard';
+
+    const apps = [
+      { id: 1, name: 'CRM', category: 'Sales', desc: 'Customer relationship management system for deals and renewals.', roles: ['VIEWER', 'EDITOR', 'ADMIN'] },
+      { id: 2, name: 'HRMS', category: 'HR', desc: 'Employee records, benefits, and departmental organizational charts.', roles: ['VIEWER', 'EDITOR'] },
+      { id: 3, name: 'Finance Portal', category: 'Finance', desc: 'Budgeting, vendor invoice approvals, and quarterly expense reconciliation.', roles: ['VIEWER', 'EDITOR'] },
+      { id: 4, name: 'Project Management', category: 'Operations', desc: 'Sprint tracking, engineering backlog, and task boards.', roles: ['VIEWER', 'EDITOR'] }
+    ];
+
+    let requests = [
+      { id: 1, requesterId: 3, requesterName: 'Ethan Employee', appName: 'CRM', role: 'EDITOR', status: 'PENDING_MANAGER_APPROVAL', justification: 'Need edit access to update customer contact records for Q4 renewals.', date: '2026-09-28 14:30', managerNote: null, adminNote: null },
+      { id: 2, requesterId: 4, requesterName: 'Priya Patel', appName: 'Finance Portal', role: 'VIEWER', status: 'PENDING_ADMIN_APPROVAL', justification: 'Require view access to review vendor vouchers for department audit.', date: '2026-09-28 10:15', managerNote: 'Approved. Priya is leading vendor audit.', adminNote: null },
+      { id: 3, requesterId: 3, requesterName: 'Ethan Employee', appName: 'Project Management', role: 'EDITOR', status: 'ACCESS_GRANTED', justification: 'Sprint lead for AccessFlow portal implementation.', date: '2026-09-27 09:00', managerNote: 'Approved.', adminNote: 'Security check verified. Access provisioned.' }
+    ];
+
+    let permissions = [
+      { id: 1, userId: 3, userName: 'Ethan Employee', appName: 'CRM', role: 'VIEWER', status: 'ACTIVE', date: '2026-09-15' },
+      { id: 2, userId: 3, userName: 'Ethan Employee', appName: 'Project Management', role: 'EDITOR', status: 'ACTIVE', date: '2026-09-27' },
+      { id: 3, userId: 4, userName: 'Priya Patel', appName: 'HRMS', role: 'VIEWER', status: 'ACTIVE', date: '2026-09-20' }
+    ];
+
+    let auditLogs = [
+      { timestamp: '2026-09-28 14:30', actor: 'Ethan Employee', action: 'ACCESS_REQUEST_CREATED', target: 'AccessRequest #1', cid: 'req-c7a829', details: 'Submitted CRM (EDITOR) request' },
+      { timestamp: '2026-09-28 11:00', actor: 'Mia Manager', action: 'MANAGER_APPROVED', target: 'AccessRequest #2', cid: 'appr-82f91a', details: 'Forwarded Finance Portal request to Admin' },
+      { timestamp: '2026-09-27 10:30', actor: 'Ava Administrator', action: 'PERMISSION_GRANTED', target: 'UserPermission #2', cid: 'perm-99b31d', details: 'Granted Project Management EDITOR to Ethan' }
+    ];
+
+    let selectedAppId = 1;
+
+    function showFeedback(msg) {
+      const el = document.getElementById('feedback-alert');
+      document.getElementById('feedback-text').innerText = msg;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 3500);
+    }
+
+    function switchRole(role) {
+      currentRole = role;
+      document.getElementById('btn-role-emp').className = role === 'EMPLOYEE' ? 'px-2.5 py-1 rounded font-medium bg-blue-600 text-white transition' : 'px-2.5 py-1 rounded font-medium text-slate-300 hover:text-white transition';
+      document.getElementById('btn-role-mgr').className = role === 'MANAGER' ? 'px-2.5 py-1 rounded font-medium bg-blue-600 text-white transition' : 'px-2.5 py-1 rounded font-medium text-slate-300 hover:text-white transition';
+      document.getElementById('btn-role-adm').className = role === 'ADMIN' ? 'px-2.5 py-1 rounded font-medium bg-blue-600 text-white transition' : 'px-2.5 py-1 rounded font-medium text-slate-300 hover:text-white transition';
+
+      const avatar = document.getElementById('user-avatar');
+      const name = document.getElementById('user-name');
+      const badge = document.getElementById('user-badge');
+
+      if (role === 'EMPLOYEE') {
+        avatar.innerText = 'E';
+        name.innerText = 'Ethan Employee';
+        badge.innerText = 'EMPLOYEE';
+      } else if (role === 'MANAGER') {
+        avatar.innerText = 'M';
+        name.innerText = 'Mia Manager';
+        badge.innerText = 'MANAGER';
+      } else {
+        avatar.innerText = 'A';
+        name.innerText = 'Ava Administrator';
+        badge.innerText = 'ADMIN';
+      }
+
+      showFeedback(`Switched interactive perspective to ${role}`);
+      renderAll();
+    }
+
+    function setTab(tab) {
+      currentTab = tab;
+      const tabs = ['dashboard', 'catalog', 'requests', 'approvals', 'permissions', 'audit'];
+      tabs.forEach(t => {
+        const btn = document.getElementById('tab-' + t);
+        const sec = document.getElementById('view-' + t);
+        if (t === tab) {
+          btn.className = 'py-3 border-b-2 border-blue-600 text-blue-600 flex items-center gap-1.5 font-semibold';
+          sec.classList.remove('hidden');
+        } else {
+          btn.className = 'py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5';
+          sec.classList.add('hidden');
+        }
+      });
+      renderAll();
+    }
+
+    function renderStatus(status) {
+      if (status === 'PENDING_MANAGER_APPROVAL') return '<span class="px-2 py-0.5 rounded-full text-xs font-semibold badge-pending-mgr"><i class="bi bi-hourglass-split"></i> Awaiting Manager</span>';
+      if (status === 'PENDING_ADMIN_APPROVAL') return '<span class="px-2 py-0.5 rounded-full text-xs font-semibold badge-pending-adm"><i class="bi bi-shield-check"></i> Awaiting Admin</span>';
+      if (status === 'ACCESS_GRANTED') return '<span class="px-2 py-0.5 rounded-full text-xs font-semibold badge-granted"><i class="bi bi-check-circle-fill"></i> Access Granted</span>';
+      if (status === 'REJECTED') return '<span class="px-2 py-0.5 rounded-full text-xs font-semibold badge-rejected"><i class="bi bi-x-circle-fill"></i> Rejected</span>';
+      return '<span class="px-2 py-0.5 rounded-full text-xs font-semibold badge-cancelled">Cancelled</span>';
+    }
+
+    function renderAll() {
+      // 1. Stats
+      document.getElementById('stat-total-req').innerText = requests.length;
+      document.getElementById('stat-pending-req').innerText = requests.filter(r => r.status.includes('PENDING')).length;
+      document.getElementById('stat-active-perm').innerText = permissions.filter(p => p.status === 'ACTIVE').length;
+      document.getElementById('stat-audit-count').innerText = auditLogs.length;
+
+      document.getElementById('my-req-count').innerText = requests.filter(r => r.requesterName.includes('Ethan')).length;
+      const pendingMgr = requests.filter(r => r.status === 'PENDING_MANAGER_APPROVAL').length;
+      const pendingAdm = requests.filter(r => r.status === 'PENDING_ADMIN_APPROVAL').length;
+      document.getElementById('pipe-stage1').innerText = `${pendingMgr} Request awaiting Manager`;
+      document.getElementById('pipe-stage2').innerText = `${pendingAdm} Request awaiting Admin`;
+      document.getElementById('pipe-stage3').innerText = `${requests.filter(r => r.status === 'ACCESS_GRANTED').length} Successfully Granted`;
+
+      document.getElementById('pending-count').innerText = currentRole === 'ADMIN' ? pendingAdm : pendingMgr;
+
+      // 2. Dash requests
+      const dashTbody = document.getElementById('dash-requests-tbody');
+      dashTbody.innerHTML = requests.slice(0, 4).map(r => `
+        <tr>
+          <td class="p-3 font-semibold text-slate-800">${r.requesterName}</td>
+          <td class="p-3">${r.appName} <span class="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border">${r.role}</span></td>
+          <td class="p-3">${renderStatus(r.status)}</td>
+          <td class="p-3 text-right">
+            <button onclick="inspectTimeline(${r.id})" class="text-xs text-blue-600 hover:underline font-semibold">Inspect &rarr;</button>
+          </td>
+        </tr>
+      `).join('');
+
+      // 3. Catalog
+      const catGrid = document.getElementById('catalog-grid');
+      catGrid.innerHTML = apps.map(a => `
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between hover:shadow-md transition">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">${a.category}</span>
+            <h3 class="font-bold text-slate-900 text-lg mt-2">${a.name}</h3>
+            <p class="text-xs text-slate-500 mt-1 mb-4">${a.desc}</p>
+            <div class="text-[11px] text-slate-400 mb-3 font-semibold uppercase">Roles: ${a.roles.join(' · ')}</div>
+          </div>
+          <button onclick="openRequestModal(${a.id})" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition">Request Access</button>
+        </div>
+      `).join('');
+
+      // 4. My Requests
+      const myReqs = currentRole === 'EMPLOYEE' ? requests.filter(r => r.requesterName.includes('Ethan')) : requests;
+      const myTbody = document.getElementById('my-requests-tbody');
+      myTbody.innerHTML = myReqs.map(r => `
+        <tr>
+          <td class="p-3 font-mono text-xs text-slate-500">#${r.id}</td>
+          <td class="p-3 font-semibold text-slate-900">${r.appName}</td>
+          <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded text-xs border text-slate-700">${r.role}</span></td>
+          <td class="p-3">${renderStatus(r.status)}</td>
+          <td class="p-3 text-xs text-slate-500 max-w-xs truncate">"${r.justification}"</td>
+          <td class="p-3 text-right space-x-2">
+            <button onclick="inspectTimeline(${r.id})" class="text-xs text-blue-600 hover:underline font-semibold">Timeline</button>
+            ${(r.status === 'PENDING_MANAGER_APPROVAL' && currentRole === 'EMPLOYEE') ? `<button onclick="cancelRequest(${r.id})" class="text-xs text-rose-600 hover:underline">Cancel</button>` : ''}
+          </td>
+        </tr>
+      `).join('');
+
+      // 5. Approvals
+      const appTbody = document.getElementById('approvals-tbody');
+      let queue = [];
+      if (currentRole === 'MANAGER') queue = requests.filter(r => r.status === 'PENDING_MANAGER_APPROVAL');
+      else if (currentRole === 'ADMIN') queue = requests.filter(r => r.status === 'PENDING_ADMIN_APPROVAL');
+      else queue = requests.filter(r => r.status.includes('PENDING'));
+
+      if (queue.length === 0) {
+        appTbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 text-xs">No pending requests awaiting approval for your role.</td></tr>`;
+      } else {
+        appTbody.innerHTML = queue.map(r => `
+          <tr>
+            <td class="p-3 font-semibold text-slate-900">${r.requesterName}</td>
+            <td class="p-3">${r.appName} (${r.role})</td>
+            <td class="p-3 text-xs text-slate-500 max-w-xs">"${r.justification}"</td>
+            <td class="p-3">${renderStatus(r.status)}</td>
+            <td class="p-3 text-right space-x-2">
+              <button onclick="approveRequest(${r.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold shadow-sm">
+                ${currentRole === 'ADMIN' ? 'Grant Access' : 'Endorse'}
+              </button>
+              <button onclick="rejectRequest(${r.id})" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded text-xs font-semibold">
+                Reject
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // 6. Permissions
+      const permTbody = document.getElementById('permissions-tbody');
+      permTbody.innerHTML = permissions.map(p => `
+        <tr>
+          <td class="p-3 font-semibold text-slate-900">${p.userName}</td>
+          <td class="p-3">${p.appName}</td>
+          <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded text-xs border text-slate-700">${p.role}</span></td>
+          <td class="p-3">${p.status === 'ACTIVE' ? '<span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-xs font-semibold border border-emerald-200">ACTIVE</span>' : '<span class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full text-xs line-through">REVOKED</span>'}</td>
+          <td class="p-3 text-xs text-slate-500">${p.date}</td>
+          <td class="p-3 text-right">
+            ${p.status === 'ACTIVE' ? `<button onclick="revokePerm(${p.id})" class="text-xs text-rose-600 hover:underline">Revoke</button>` : `<span class="text-xs text-slate-400">Archived</span>`}
+          </td>
+        </tr>
+      `).join('');
+
+      // 7. Audit
+      const auditTbody = document.getElementById('audit-tbody');
+      auditTbody.innerHTML = auditLogs.map(a => `
+        <tr>
+          <td class="p-3 text-slate-500">${a.timestamp}</td>
+          <td class="p-3 font-semibold text-slate-900">${a.actor}</td>
+          <td class="p-3"><span class="px-1.5 py-0.5 bg-slate-100 rounded border text-blue-700 font-bold">${a.action}</span></td>
+          <td class="p-3 text-slate-600">${a.target}</td>
+          <td class="p-3 text-slate-400">${a.cid}</td>
+          <td class="p-3 text-slate-700">${a.details}</td>
+        </tr>
+      `).join('');
+    }
+
+    function openRequestModal(appId) {
+      selectedAppId = appId;
+      const app = apps.find(a => a.id === appId);
+      document.getElementById('modal-app-title').innerText = `Request Access: ${app.name}`;
+      const sel = document.getElementById('modal-role-select');
+      sel.innerHTML = app.roles.map(r => `<option value="${r}">${r}</option>`).join('');
+      document.getElementById('modal-justification').value = '';
+      document.getElementById('request-modal').classList.remove('hidden');
+    }
+
+    function closeRequestModal() {
+      document.getElementById('request-modal').classList.add('hidden');
+    }
+
+    function submitAccessRequest() {
+      const just = document.getElementById('modal-justification').value;
+      if (!just.trim()) {
+        alert('Business justification is mandatory.');
+        return;
+      }
+      const role = document.getElementById('modal-role-select').value;
+      const app = apps.find(a => a.id === selectedAppId);
+      const newId = requests.length + 1;
+
+      requests.unshift({
+        id: newId,
+        requesterId: 3,
+        requesterName: 'Ethan Employee',
+        appName: app.name,
+        role: role,
+        status: 'PENDING_MANAGER_APPROVAL',
+        justification: just.trim(),
+        date: '2026-09-28 15:00',
+        managerNote: null,
+        adminNote: null
+      });
+
+      auditLogs.unshift({
+        timestamp: '2026-09-28 15:00',
+        actor: 'Ethan Employee',
+        action: 'ACCESS_REQUEST_CREATED',
+        target: `AccessRequest #${newId}`,
+        cid: 'req-' + Math.random().toString(36).substring(2, 8),
+        details: `Requested ${role} access for ${app.name}`
+      });
+
+      closeRequestModal();
+      showFeedback(`Access request #${newId} for ${app.name} submitted successfully!`);
+      setTab('requests');
+    }
+
+    function cancelRequest(id) {
+      const r = requests.find(item => item.id === id);
+      if (r) {
+        r.status = 'CANCELLED';
+        auditLogs.unshift({
+          timestamp: '2026-09-28 15:05',
+          actor: 'Ethan Employee',
+          action: 'ACCESS_REQUEST_CANCELLED',
+          target: `AccessRequest #${id}`,
+          cid: 'req-c' + id,
+          details: 'Requester cancelled pending request'
+        });
+        showFeedback(`Request #${id} cancelled.`);
+        renderAll();
+      }
+    }
+
+    function approveRequest(id) {
+      const r = requests.find(item => item.id === id);
+      if (!r) return;
+
+      if (r.status === 'PENDING_MANAGER_APPROVAL') {
+        r.status = 'PENDING_ADMIN_APPROVAL';
+        r.managerNote = 'Approved: verified project alignment';
+        auditLogs.unshift({
+          timestamp: '2026-09-28 15:10',
+          actor: 'Mia Manager',
+          action: 'MANAGER_APPROVED',
+          target: `AccessRequest #${id}`,
+          cid: 'appr-' + Math.random().toString(36).substring(2, 8),
+          details: `Manager approved ${r.appName} (${r.role}) request`
+        });
+        showFeedback(`Request #${id} endorsed by Manager. Now pending Admin.`);
+      } else if (r.status === 'PENDING_ADMIN_APPROVAL') {
+        r.status = 'ACCESS_GRANTED';
+        r.adminNote = 'Security review complete. Provisioned.';
+        const newPermId = permissions.length + 1;
+        permissions.push({
+          id: newPermId,
+          userId: r.requesterId,
+          userName: r.requesterName,
+          appName: r.appName,
+          role: r.role,
+          status: 'ACTIVE',
+          date: '2026-09-28'
+        });
+        auditLogs.unshift({
+          timestamp: '2026-09-28 15:15',
+          actor: 'Ava Administrator',
+          action: 'PERMISSION_GRANTED',
+          target: `UserPermission #${newPermId}`,
+          cid: 'perm-' + Math.random().toString(36).substring(2, 8),
+          details: `Provisioned ${r.role} on ${r.appName} to ${r.requesterName}`
+        });
+        showFeedback(`Request #${id} authorized by Admin! Entitlement provisioned.`);
+      }
+      renderAll();
+    }
+
+    function rejectRequest(id) {
+      const reason = prompt('Please enter mandatory rejection justification:');
+      if (!reason || !reason.trim()) {
+        alert('Rejection requires a documented reason.');
+        return;
+      }
+      const r = requests.find(item => item.id === id);
+      if (r) {
+        const old = r.status;
+        r.status = 'REJECTED';
+        const actor = old === 'PENDING_MANAGER_APPROVAL' ? 'Mia Manager' : 'Ava Administrator';
+        const actName = old === 'PENDING_MANAGER_APPROVAL' ? 'MANAGER_REJECTED' : 'ADMIN_REJECTED';
+        auditLogs.unshift({
+          timestamp: '2026-09-28 15:20',
+          actor: actor,
+          action: actName,
+          target: `AccessRequest #${id}`,
+          cid: 'rej-' + Math.random().toString(36).substring(2, 8),
+          details: `Rejected: "${reason.trim()}"`
+        });
+        showFeedback(`Request #${id} rejected.`);
+        renderAll();
+      }
+    }
+
+    function revokePerm(id) {
+      const reason = prompt('Reason for revoking permission:');
+      const p = permissions.find(item => item.id === id);
+      if (p) {
+        p.status = 'REVOKED';
+        auditLogs.unshift({
+          timestamp: '2026-09-28 15:25',
+          actor: currentRole === 'ADMIN' ? 'Ava Administrator' : 'Ethan Employee',
+          action: 'PERMISSION_REVOKED',
+          target: `UserPermission #${id}`,
+          cid: 'rev-' + id,
+          details: reason || 'Access relinquished'
+        });
+        showFeedback(`Permission #${id} revoked.`);
+        renderAll();
+      }
+    }
+
+    function inspectTimeline(id) {
+      const r = requests.find(item => item.id === id);
+      if (!r) return;
+      setTab('requests');
+      const box = document.getElementById('timeline-box');
+      document.getElementById('timeline-title').innerText = `Multi-Stage Approval Pipeline: Request #${r.id} (${r.appName})`;
+      box.classList.remove('hidden');
+
+      const stepper = document.getElementById('timeline-stepper');
+      stepper.innerHTML = `
+        <div class="flex gap-3">
+          <div class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold"><i class="bi bi-check"></i></div>
+          <div class="text-xs">
+            <div class="font-bold text-slate-800">1. Submitted by ${r.requesterName}</div>
+            <div class="text-slate-500">"${r.justification}" · ${r.date}</div>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <div class="w-7 h-7 rounded-full ${r.status !== 'PENDING_MANAGER_APPROVAL' && r.status !== 'CANCELLED' ? (r.status === 'REJECTED' && !r.managerNote ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white') : 'bg-amber-500 text-white'} flex items-center justify-center text-xs font-bold">
+            ${r.status === 'PENDING_MANAGER_APPROVAL' ? '<i class="bi bi-hourglass-split"></i>' : '<i class="bi bi-check"></i>'}
+          </div>
+          <div class="text-xs">
+            <div class="font-bold text-slate-800">2. Manager Endorsement: Mia Manager</div>
+            <div class="text-slate-500">${r.managerNote || (r.status === 'PENDING_MANAGER_APPROVAL' ? 'Awaiting manager evaluation' : 'Completed')}</div>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <div class="w-7 h-7 rounded-full ${r.status === 'ACCESS_GRANTED' ? 'bg-emerald-600 text-white' : (r.status === 'PENDING_ADMIN_APPROVAL' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600')} flex items-center justify-center text-xs font-bold">
+            ${r.status === 'ACCESS_GRANTED' ? '<i class="bi bi-check"></i>' : (r.status === 'PENDING_ADMIN_APPROVAL' ? '<i class="bi bi-hourglass-split"></i>' : '3')}
+          </div>
+          <div class="text-xs">
+            <div class="font-bold text-slate-800">3. Administrator Authorization: Ava Administrator</div>
+            <div class="text-slate-500">${r.adminNote || (r.status === 'PENDING_ADMIN_APPROVAL' ? 'In administrative queue' : 'Pending manager signoff')}</div>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <div class="w-7 h-7 rounded-full ${r.status === 'ACCESS_GRANTED' ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'} flex items-center justify-center text-xs font-bold">
+            ${r.status === 'ACCESS_GRANTED' ? '<i class="bi bi-key-fill"></i>' : '4'}
+          </div>
+          <div class="text-xs">
+            <div class="font-bold text-slate-800">4. Entitlement Provisioning</div>
+            <div class="text-slate-500">${r.status === 'ACCESS_GRANTED' ? 'Role activated in target system & permission record created' : 'Inactive'}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Initial render
+    renderAll();
+  </script>
+</body>
+</html>
