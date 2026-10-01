@@ -13,7 +13,7 @@ Designed as a showcase project for technical interviews (e.g. Virtusa) and profe
 
 ---
 
-## 1. System Architecture
+## System Architecture
 
 ```
                   ┌──────────────────────────────────────────┐
@@ -54,7 +54,7 @@ Designed as a showcase project for technical interviews (e.g. Virtusa) and profe
 
 ---
 
-## 2. Relational Database Design
+## Relational Database Design
 
 Full DDL: [`database/schema.sql`](database/schema.sql) · Seed data: [`database/seed.sql`](database/seed.sql)
 ER Diagram: [`docs/ER_DIAGRAM.md`](docs/ER_DIAGRAM.md)
@@ -73,7 +73,7 @@ ER Diagram: [`docs/ER_DIAGRAM.md`](docs/ER_DIAGRAM.md)
 
 ---
 
-## 3. Two-Stage Approval Workflow State Machine
+## Two-Stage Approval Workflow State Machine
 
 ```
 Employee submits request
@@ -94,7 +94,7 @@ Request status: PENDING_MANAGER_APPROVAL
 
 ---
 
-## 4. Demo Accounts (Password for all: `Password123!`)
+## Demo Accounts (Password for all: `Password123!`)
 
 | Role | User Name | Email | Reporting Manager |
 |---|---|---|---|
@@ -103,67 +103,6 @@ Request status: PENDING_MANAGER_APPROVAL
 | **EMPLOYEE** | Ethan Employee | `employee@accessflow.io` | Mia Manager |
 | **EMPLOYEE** | Priya Patel | `priya@accessflow.io` | Mia Manager |
 
----
-
-## 5. Quick Start Instructions
-
-### Option A: Run with Docker Compose (Recommended)
-
-To run the entire ecosystem (MySQL 8, Spring Boot Backend, and React Frontend) with one command:
-
-```bash
-# Clone or navigate to the project root
-cd AccessFlow
-
-# Build and launch all containers
-docker compose up -d
-
-# Verify health
-docker compose ps
-```
-
-- **Frontend Application**: `http://localhost:5173`
-- **Backend REST API**: `http://localhost:8080/api`
-- **MySQL Database**: `localhost:3306` (`accessflow_user` / `changeme`)
-
----
-
-### Option B: Run Locally (Development Mode)
-
-#### 1. Start MySQL 8
-Using Docker:
-```bash
-docker compose up -d mysql
-```
-Or start your local MySQL 8 server and execute:
-```bash
-mysql -u root -p < database/schema.sql
-mysql -u root -p < database/seed.sql
-```
-
-#### 2. Run the Spring Boot Backend
-```bash
-cd backend
-cp .env.example .env
-
-# Run via Maven
-mvn spring-boot:run
-```
-*Note: A turnkey `DataInitializer` is included — if running against a fresh database, demo users, applications, and permissions are automatically seeded!*
-
-#### 3. Run the React Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Open your browser at `http://localhost:5173`.
-
----
-
-## 6. Frontend Pages & Reusable Components
-
-The frontend is styled in a modern enterprise design palette with deep navy blue (`#0f2a4a`), slate accents, and off-white backgrounds (`#f8fafc`):
 
 ### Public
 - **Login Page**: Includes 1-click demo fill buttons for quick presentation testing.
@@ -193,39 +132,6 @@ The frontend is styled in a modern enterprise design palette with deep navy blue
 - **Audit Trail Explorer**: Append-only compliance log with action filters and modal inspection.
 - **Access Review Campaigns**: Periodic certification campaigns with progress tracker and retain/revoke decisions.
 - **System Settings**: Identity policies, token TTL, and security configurations.
-
----
-
-## 7. Testing & Verification
-
-Unit and service-layer tests are located in `backend/src/test/java/com/accessflow/service/`:
-- `AccessRequestServiceTest`: Tests happy-path request submission, duplicate pending checks, role-application cross-checks, manager requirement, and cancellation rules.
-- `ApprovalServiceTest`: Tests manager approval transitions, mandatory comments on rejection, unauthorized approver rejection, self-approval prevention, and admin transactional permission grants.
-- `PermissionServiceTest`: Tests permission retrieval, administrative and self-service revocation, and unauthorized revocation prevention.
-- `ApplicationServiceTest`: Tests catalog visibility, duplicate role names, and application creation.
-
-To execute tests:
-```bash
-cd backend
-mvn clean test
-```
-
-### Postman API Collection
-Import [`postman/AccessFlow.postman_collection.json`](postman/AccessFlow.postman_collection.json) into Postman. Executing "Login as Employee" (or Manager/Admin) automatically populates the `{{token}}` variable for all subsequent requests.
-
----
-
-## 8. Technical Interview Talking Points (Virtusa Preparation)
-
-1. **Transactional Boundaries (`@Transactional`)**:
-   > *"In `ApprovalService.processAdminDecision()`, transitioning the request status to `ACCESS_GRANTED` and creating the `UserPermission` entity are wrapped in the same `@Transactional` method. If permission creation fails for any reason, the entire transaction rolls back so an access request is never marked approved without an actual permission granted."*
-
-2. **Snapshot vs Live Foreign Key**:
-   > *"In `access_requests`, `assigned_manager_id` snapshots the employee's manager at the exact moment the request is submitted. If the employee later changes departments or reports to another manager, historical approval audits remain 100% accurate."*
-
-3. **Append-Only Audit Trail**:
-   > *"The `AuditService` is the sole entry point for writing to `audit_logs`. The `AuditLogRepository` deliberately exposes no update or delete methods above JPA defaults, and no update/delete REST endpoints exist, guaranteeing compliance and SOC 2 integrity."*
-
 4. **Multi-Tiered Validation**:
    > *"We validate requests at two levels: Bean Validation on DTO records catches malformed inputs at the controller threshold, while the Service layer enforces business rules like in-flight duplicate prevention, active application checks, and role-to-application membership."*
 
