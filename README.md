@@ -54,25 +54,6 @@ Designed as a showcase project for technical interviews (e.g. Virtusa) and profe
 
 ---
 
-## Relational Database Design
-
-Full DDL: [`database/schema.sql`](database/schema.sql) · Seed data: [`database/seed.sql`](database/seed.sql)
-ER Diagram: [`docs/ER_DIAGRAM.md`](docs/ER_DIAGRAM.md)
-
-### 10 Core Tables:
-1. `users` — Enterprise identities, self-referential reporting manager (`manager_id`), BCrypt hash, user role.
-2. `applications` — Software systems (CRM, HRMS, Finance Portal, Project Management System), owner, active status.
-3. `application_roles` — Granular entitlement levels (VIEWER, EDITOR, ADMIN) scoped to applications.
-4. `access_requests` — Employee requests, snapshot of assigned manager, business justification, status.
-5. `approval_history` — Immutable decision records (approver, stage, decision, timestamp, comments).
-6. `user_permissions` — Active and historical permissions linked directly to approving access request (`access_request_id`).
-7. `audit_logs` — Irrevocable append-only audit entries with actor, action, old/new states, reason, and correlation ID.
-8. `access_reviews` — Periodic certification campaigns created by administrators.
-9. `access_review_items` — Permission audit items in a campaign for retention or revocation.
-10. `notifications` — In-app alerts and notifications dispatched on workflow state changes.
-
----
-
 ## Two-Stage Approval Workflow State Machine
 
 ```
@@ -132,8 +113,3 @@ Request status: PENDING_MANAGER_APPROVAL
 - **Audit Trail Explorer**: Append-only compliance log with action filters and modal inspection.
 - **Access Review Campaigns**: Periodic certification campaigns with progress tracker and retain/revoke decisions.
 - **System Settings**: Identity policies, token TTL, and security configurations.
-4. **Multi-Tiered Validation**:
-   > *"We validate requests at two levels: Bean Validation on DTO records catches malformed inputs at the controller threshold, while the Service layer enforces business rules like in-flight duplicate prevention, active application checks, and role-to-application membership."*
-
-5. **Defense in Depth**:
-   > *"We never rely solely on frontend component hiding. Spring Security `@PreAuthorize` method annotations and service-level identity checks verify every action on the server side."*
